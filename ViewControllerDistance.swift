@@ -4,7 +4,7 @@
 //
 //  Created by Cyrus Illick on 9/20/18.
 //  Copyright © 2018 Cyrus Illick. All rights reserved.
-//
+// This file is used in an app that displays tweets from geographic areas. This file just loads the distance to each state capital into cells and displays it to the user.
 
 import Foundation
 import UIKit
@@ -14,8 +14,7 @@ import CoreLocation
 class ViewControllerDistance: UITableViewController, CLLocationManagerDelegate {
    
     
-//    var closestState1: String = ""
-//    var distToCapital: String = ""
+
     
     
     
