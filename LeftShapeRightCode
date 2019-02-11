@@ -1,0 +1,443 @@
+//
+//  GameScene.swift
+//  NewGame
+//
+//  Created by Cyrus Illick on 1/18/19.
+//  Copyright © 2019 CyrusIllick. All rights reserved.
+//
+
+import SpriteKit
+import GameplayKit
+
+//background colors
+//RGB: 238, 226, 223
+//RGB: 238, 215, 197
+//RGB: 200, 159, 156
+//RGB: 201, 124, 93
+//RGB: 179, 106, 94
+
+var score = 0
+
+
+enum PlayColors{
+    static let colors = [
+        UIColor(red: 8/255, green: 3/255, blue: 87/255, alpha: 1.0),
+        UIColor(red: 231/255, green: 29/255, blue: 54/255, alpha: 1.0),
+        UIColor(red: 46/255, green: 196/255, blue: 182/255, alpha: 1.0),
+        UIColor(red: 89/255, green: 205/255, blue: 144/255, alpha: 1.0),
+        UIColor(red: 72/255, green: 44/255, blue: 61/255, alpha: 1.0),
+        UIColor(red: 21/255, green: 50/255, blue: 67/255, alpha: 1.0),
+        UIColor(red: 93/255, green: 87/255, blue: 107/255, alpha: 1.0),
+        UIColor(red: 230/255, green: 175/255, blue: 46/255, alpha: 1.0),
+        UIColor(red: 61/255, green: 52/255, blue: 139/255, alpha: 1.0),
+        UIColor(red: 252/255, green: 129/255, blue: 74/255, alpha: 1.0),
+        
+        
+    ]
+    
+}
+
+enum BackgroundColors{
+    static let colors = [
+        UIColor(red: 1/255, green: 22/255, blue: 30/255, alpha: 1.0),
+        UIColor(red: 18/255, green: 40/255, blue: 45/255, alpha: 1.0),
+        UIColor(red: 32/255, green: 6/255, blue: 2/255, alpha: 1.0),
+        UIColor(red: 15/255, green: 32/255, blue: 39/255, alpha: 1.0),
+        UIColor(red: 101/255, green: 50/255, blue: 57/255, alpha: 1.0),
+        UIColor(red: 80/255, green: 66/255, blue: 87/255, alpha: 1.0),
+        UIColor(red: 60/255, green: 49/255, blue: 12/255, alpha: 1.0),
+        UIColor(red: 156/255, green: 30/255, blue: 30/255, alpha: 1.0),
+        UIColor(red: 9/255, green: 60/255, blue: 34/255, alpha: 1.0),
+        UIColor(red: 47/255, green: 12/255, blue: 63/255, alpha: 1.0),
+    ]
+}
+
+
+//Play Colors
+//RGB: 172, 57, 49
+//RGB: 229, 211, 82
+//RGB: 217, 231, 108
+//RGB: 83, 125, 141
+//RGB: 72, 44, 61
+
+//RGB: 108, 212, 255
+//RGB: 93, 87, 107
+//RGB: 230, 175, 46
+//RGB: 61, 52, 139
+//RGB: 252, 129, 74
+
+
+class GameScene: SKScene, SKPhysicsContactDelegate {
+    
+
+    
+    var currentColorIndexBack = Int(arc4random_uniform(UInt32(10)))
+    
+    var levelNumber = 0
+    
+    let TapToStartLabel = SKLabelNode(fontNamed: "Baskerville-SemiBold")
+    
+
+    
+    var redBar: SKSpriteNode!
+    var whiteBar1: SKSpriteNode!
+    var currentColorIndex: Int?
+    var stopBarSquare: SKSpriteNode!
+    var stopBarCircle: SKSpriteNode!
+    var bottom: SKSpriteNode!
+    var checkSquare: SKSpriteNode!
+    var stopBarRight: SKSpriteNode!
+    var stopBarLeft: SKSpriteNode!
+    
+    
+    let rotationTime = 1.3
+    let scoreLabel = SKLabelNode(fontNamed: "Baskerville-SemiBold")
+    
+    var color = UIColor(red: 1, green: 0.556, blue: 0.232, alpha: 1)
+
+    var right = true
+    var left = true
+    
+
+    enum gameState {
+        case preGame
+        case inGame
+        case afterGame
+    }
+    
+    var currentGameState = gameState.preGame
+    
+    override func didMove(to view: SKView) {
+        score = 0
+        setUpPhysics()
+        layoutScene()
+        startNewLevel()
+
+        
+
+    }
+    
+    
+    func startGame(){
+        currentGameState = gameState.inGame
+
+        
+    }
+    
+    func runGameOver(){
+        currentGameState = gameState.afterGame
+        
+        let changeSceneAction = SKAction.run(changeScene)
+        self.run(changeSceneAction)
+    }
+    
+    func changeScene(){
+        let sceneToMoveTo = GameOverScene(size: self.size)
+        sceneToMoveTo.scaleMode = self.scaleMode
+        let myTransition = SKTransition.fade(withDuration: 0.5)
+        self.view!.presentScene(sceneToMoveTo, transition: myTransition)
+    }
+    
+    func setUpPhysics(){
+        physicsWorld.gravity = CGVector(dx: 0.0, dy: -1.5)
+        physicsWorld.contactDelegate = self
+        
+        
+    }
+    
+    
+    
+    func layoutScene() {
+                backgroundColor = UIColor(red: 200/255, green: 226/255, blue: 255/255, alpha: 1.0)
+        
+
+        let gameDirections = SKSpriteNode(imageNamed: "GameDirections")
+        gameDirections.color = BackgroundColors.colors[currentColorIndexBack]
+        gameDirections.colorBlendFactor = 1.0
+        gameDirections.setScale(0.6)
+        gameDirections.position = CGPoint(x: self.size.width/2, y: self.size.height * 0.85)
+        gameDirections.zPosition = 1
+        self.addChild(gameDirections)
+        
+        scoreLabel.text = "0"
+        scoreLabel.fontSize = 45
+        scoreLabel.fontColor = BackgroundColors.colors[currentColorIndexBack]
+        scoreLabel.position = CGPoint(x: self.size.width * 0.5, y: self.size.height * 0.9)
+        scoreLabel.zPosition = 100
+        self.addChild(scoreLabel)
+        
+        
+
+        redBar = SKSpriteNode(texture: SKTexture(imageNamed: "whiteRect"), color: BackgroundColors.colors[currentColorIndexBack],size: CGSize(width: frame.size.width * 0.75, height: frame.size.width/16))
+        redBar.colorBlendFactor = 1.0
+        redBar.position = CGPoint(x: frame.size.width * 0.5, y: frame.size.height * 0.5)
+        redBar.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: redBar.size.width, height: redBar.size.height))
+        redBar.physicsBody?.isDynamic = false
+        addChild(redBar)
+        redBar.run(SKAction.repeatForever(SKAction.rotate(byAngle: CGFloat(Double.pi), duration: rotationTime)))
+        
+
+
+        
+        
+        stopBarCircle = SKSpriteNode(imageNamed: "whiteRect")
+        stopBarCircle.size = CGSize(width: frame.size.width * 4, height: 10)
+        stopBarCircle.position = CGPoint(x: frame.size.width * 0.5, y: -50)
+        stopBarCircle.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: stopBarCircle.size.width, height: stopBarCircle.size.height))
+        stopBarCircle.physicsBody?.categoryBitMask = PhysicsCategories.ballSideCategory
+        stopBarCircle.physicsBody?.isDynamic = false
+        addChild(stopBarCircle)
+        
+        
+        
+        
+        bottom = SKSpriteNode(texture: SKTexture(imageNamed: "whiteRect"), color: BackgroundColors.colors[currentColorIndexBack],size: CGSize(width: frame.size.width * 0.8, height: frame.size.width * 0.8))
+        bottom.colorBlendFactor = 1.0
+        bottom.position = CGPoint(x: self.size.width/2,y: -self.size.height * 0.1)
+        bottom.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: bottom.size.width, height: bottom.size.height))
+        bottom.physicsBody?.isDynamic = false
+        addChild(bottom)
+        let rotate = SKAction.rotate(byAngle: 3.14/4, duration: 0)
+        bottom.run(rotate)
+
+ 
+    }
+    
+
+
+    
+    
+    
+    func spawnSquare() {
+        currentColorIndex = Int(arc4random_uniform(UInt32(10)))
+        let square = SKSpriteNode(texture: SKTexture(imageNamed: "whiteRect"), color: PlayColors.colors[currentColorIndex!], size: CGSize(width: frame.size.width/9, height: frame.size.width/9))
+        square.colorBlendFactor = 1.0
+        square.name = "Square"
+        square.position = CGPoint(x: frame.size.width * 1.2, y: frame.size.height * 0.55)
+        square.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: square.size.width, height: square.size.height))
+        square.physicsBody?.categoryBitMask = PhysicsCategories.CubeCategory
+        square.physicsBody?.contactTestBitMask = PhysicsCategories.CubeSideCategory
+        square.physicsBody?.contactTestBitMask = PhysicsCategories.ballSideCategory
+        square.physicsBody?.affectedByGravity = true
+
+        square.zPosition = 4
+        addChild(square)
+        
+        let sideThrow = Int(arc4random_uniform(2))
+        
+        var dx: CGFloat
+        var dy: CGFloat
+        
+        if (sideThrow == 1){
+         dx = CGFloat.random(in: -15.3 ..< -10.3)
+         dy = CGFloat.random(in: 40.3 ..< 45.3)
+        
+        let mag = sqrt(dx * dx + dy * dy)
+        
+        dx /= mag
+        dy /= mag
+            
+        } else {
+            square.position = CGPoint(x: frame.size.width * -0.2, y: frame.size.height * 0.55)
+           dx = CGFloat.random(in: 10.3 ..< 15.3)
+            dy = CGFloat.random(in: 40.3 ..< 45.3)
+            
+            let mag = sqrt(dx * dx + dy * dy)
+            
+            dx /= mag
+            dy /= mag
+        }
+        
+        let v0 = CGVector(dx: 30.0 * dx, dy: 30.0 * dy)
+        
+        square.physicsBody?.applyImpulse(v0)
+        
+        
+        
+    }
+    
+    func spawnCircle() {
+        currentColorIndex = Int(arc4random_uniform(UInt32(10)))
+        let circle = SKSpriteNode(texture: SKTexture(imageNamed: "whiteDot"), color: PlayColors.colors[currentColorIndex!], size: CGSize(width: frame.size.width/9, height: frame.size.width/9))
+        circle.colorBlendFactor = 1.0
+        circle.name = "circle"
+        circle.position = CGPoint(x: frame.size.width * 1.2, y: frame.size.height * 0.55)
+        circle.physicsBody = SKPhysicsBody(circleOfRadius: circle.size.width/2)
+        circle.physicsBody?.categoryBitMask = PhysicsCategories.ballCategory
+        circle.physicsBody?.contactTestBitMask = PhysicsCategories.CubeSideCategory
+        circle.physicsBody?.contactTestBitMask = PhysicsCategories.ballSideCategory
+        circle.physicsBody?.affectedByGravity = true
+        circle.zPosition = 4
+        addChild(circle)
+        
+        let sideThrow = Int(arc4random_uniform(2))
+        
+        var dx: CGFloat
+        var dy: CGFloat
+        
+        if (sideThrow == 1){
+            dx = CGFloat.random(in: -13.3 ..< -10.3)
+            dy = CGFloat.random(in: 40.3 ..< 45.3)
+            
+            let mag = sqrt(dx * dx + dy * dy)
+            
+            dx /= mag
+            dy /= mag
+            
+        } else {
+            circle.position = CGPoint(x: frame.size.width * -0.2, y: frame.size.height * 0.55)
+            dx = CGFloat.random(in: 10.3 ..< 13.3)
+            dy = CGFloat.random(in: 40.3 ..< 45.3)
+            
+            let mag = sqrt(dx * dx + dy * dy)
+            
+            dx /= mag
+            dy /= mag
+        }
+        
+        let v0 = CGVector(dx: 25.0 * dx, dy: 25.0 * dy)
+        
+        circle.physicsBody?.applyImpulse(v0)
+
+    }
+
+    
+    func addScore() {
+        score = score + 1
+        scoreLabel.text = "\(score)"
+        
+        if(score == 10 || score == 20 || score == 40 || score == 100 || score == 400){
+            startNewLevel()
+        }
+        
+    }
+    
+
+    
+    func didBegin(_ contact: SKPhysicsContact){
+        var body1 = SKPhysicsBody()
+        var body2 = SKPhysicsBody()
+        //assigns a variable to each object
+        if contact.bodyA.categoryBitMask < contact.bodyB.categoryBitMask {
+            body1 = contact.bodyA
+            body2 = contact.bodyB
+        } else {
+            body1  = contact.bodyB
+            body2 = contact.bodyA
+        }
+        
+        if (body1.categoryBitMask == PhysicsCategories.ballCategory && body2.categoryBitMask == PhysicsCategories.ballSideCategory){
+            if(body1.node?.position.x ?? 0 < self.size.width / 2){
+                print("you lose, circle on wrong side")
+                body1.node?.removeFromParent()
+                
+                scoreLabel.text = "\(score)"
+                runGameOver()
+            }
+            if(body1.node?.position.x ?? 0 > self.size.width / 2){
+          
+                
+                body1.node?.removeFromParent()
+                addScore()
+                
+            }
+            
+        }
+        if (body1.categoryBitMask == PhysicsCategories.CubeCategory && body2.categoryBitMask == PhysicsCategories.ballSideCategory) {
+            if(body1.node?.position.x ?? 0 > self.size.width / 2){
+              
+                body1.node?.removeFromParent()
+                
+                scoreLabel.text = "\(score)"
+                runGameOver()
+            }
+            if(body1.node?.position.x ?? 0 < self.size.width / 2){
+             
+                body1.node?.removeFromParent()
+                addScore()
+            }
+
+        }
+        
+
+        
+        
+    }
+    
+    
+    
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if(currentGameState == gameState.preGame){
+            TapToStartLabel.text = "Tap To Start"
+            TapToStartLabel.fontSize = 20
+            TapToStartLabel.fontColor = SKColor.black
+            TapToStartLabel.zPosition = 1
+            TapToStartLabel.position = CGPoint(x: self.size.height * 0.37, y: self.size.height/2)
+            TapToStartLabel.alpha = 1
+            self.addChild(TapToStartLabel)
+            
+            startGame()
+        }
+        if(currentGameState == gameState.inGame){
+            TapToStartLabel.removeFromParent()
+            
+            if(right){
+                right = false
+            } else {
+                right = true
+            }
+            if(right){
+                redBar.run(SKAction.repeatForever(SKAction.rotate(byAngle: CGFloat(Double.pi * 2), duration: rotationTime)))
+
+            }
+            if(!right){
+                redBar.run(SKAction.repeatForever(SKAction.rotate(byAngle: CGFloat(-Double.pi * 2), duration: rotationTime)))
+            }
+        print(score)
+
+
+        }
+    }
+    
+    
+    func blockType(){
+        let type = Int(arc4random_uniform(2))
+        if(type == 1){
+            spawnSquare()
+        } else {
+            spawnCircle()
+        }
+    }
+    
+    
+    
+
+    
+    func startNewLevel(){
+        
+        levelNumber += 1
+        var levelDuration = TimeInterval()
+        
+        switch levelNumber {
+        case 1: levelDuration = 2
+        case 2: levelDuration = 1.6
+        case 3: levelDuration = 1.2
+        case 4: levelDuration = 1.0
+        case 5: levelDuration = 0.9
+        case 6: levelDuration = 0.8
+        case 7: levelDuration = 0.6
+        default:
+            levelDuration = 0.6
+            print("Cannot find level info")
+            
+        }
+        
+        let spawn = SKAction.run(blockType)
+        let waitToSpawn = SKAction.wait(forDuration: levelDuration)
+        let SpawnCubeSequence = SKAction.sequence([waitToSpawn, spawn])
+        let SpawnForever = SKAction.repeatForever(SpawnCubeSequence)
+        self.run(SpawnForever, withKey: "SpawningBlocks")
+    }
+
+}
